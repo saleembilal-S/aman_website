@@ -28,7 +28,7 @@
         Forgot Password ?
       </label>
 
-      <button class="submit"  value="Login">Sign In</button>
+      <button class="submit"  name="signin" value="Login">Sign In</button>
       <div class="social-media">
         <ul>
           <li><img src="../../static/images/facebook.png"></li>
@@ -56,32 +56,27 @@
           <span class="m-in">Sign In</span>
         </div>
       </div>
-         <form method="post" action="{% url 'index' %}" >
-      <div class="form sign-up">
+         <form method="post">
           {% csrf_token %}
         <h2>Sign Up</h2>
         <label>
-          <span>Company name</span>
-          <input type="text">
+          <span>Company name </span>
+          <input type="text" name="comp_name" required>
         </label>
         <label>
           <span>Email</span>
-          <input type="email" name="username">
+          <input type="email" name="comp_email" required>
         </label>
         <label>
           <span>Password</span>
-          <input type="password" name="password">
-        </label>
-        <label>
-          <span>Confirm Password</span>
-          <input type="password">
+          <input type="password" name="comb_pass" required>
         </label>
          <label>
           <span>Activation code</span>
-         <input type="text" name="activation"/>
+         <input type="text" name="activation_code" required>
         </label>
-        <button class="submit">Sign Up Now</button>
-      </div>
+        <button class="submit" name="signup" value="Signup">Sign Up Now</button>
+
         </form>
     </div>
   </div>
