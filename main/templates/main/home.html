@@ -95,11 +95,21 @@
             </a>
 
         </li>
+        {% if type_user %}
         <li class="has-subnav">
             <a href="/addnewcamera">
                 <i class="fa fa-plus-square-o fa-2x"></i>
                 <span class="nav-text">
-                            Add New Camera
+                            Add a New Camera
+                        </span>
+            </a>
+
+        </li>
+              <li class="has-subnav">
+            <a href="/adduseraccount">
+                <i class="fa fa-user fa-2x"></i>
+                <span class="nav-text">
+                            Add a Policeman Account
                         </span>
             </a>
 
@@ -121,7 +131,6 @@
                         </span>
             </a>
         </li>
-
         <li>
             <a href="#">
                 <i class="fa fa-map-marker fa-2x"></i>
@@ -130,6 +139,7 @@
                         </span>
             </a>
         </li>
+        {% endif %}
         <li>
             <a href="#">
                 <i class="fa fa-cogs fa-2x "></i>

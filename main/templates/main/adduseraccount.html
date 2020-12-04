@@ -1,0 +1,40 @@
+
+{% extends 'main/home.html' %}
+{% block namepage %} <br><h3 class="mt-2">Add a Policeman Account</h3>{% endblock %}
+{% block content %}
+<div class="col-8">
+    <form method="post" enctype="multipart/form-data" onsubmit="myFunction()">
+        {% csrf_token %}
+        <div style="text-align: center;">
+
+             <br><br><br><br>
+
+            <label style="font-weight: bold; font-family: 'Monospace',serif;font-size: 20px;margin-left: 50%" for="text">Name of the Policeman:</label>
+           <input style="width: 500px;text-align: center;margin-left: 30%" type="text" id="nameofuser" name="nameofuser" required><br>
+
+            <label style="font-weight: bold; font-family: 'Monospace',serif;margin-left: 50%;font-size: 20px" for="text">Email:</label>
+             <input style="width: 500px;text-align: center;margin-left: 30%" type="email" id="email_police" name="email_police" required><br>
+            <label style="font-weight: bold; font-family: 'Monospace',serif;margin-left: 50%;font-size: 20px" for="text">New Password:</label>
+           <input style="width: 500px;text-align: center;margin-left: 30%"  type="password" id="id_password" name="id_password" required><br><br>
+
+            <label style="font-weight: bold; font-family: 'Monospace',serif;margin-left: 50%;font-size: 20px" for="text">Permission Type of this Account:</label>
+            <select style="margin-left: 50%" name="dropdown">
+            <option value="admin">Admin account</option>
+            <option value="Regular">Regular user account</option>
+            </select>
+
+            <input style="margin-left: 50%;margin-top: 10px;width: 100px"  class="btn btn-success" type="submit" value="Add" name="addaccount">
+            </div>
+    </form>
+
+</div>
+
+   <script  type="text/javascript">
+   function myFunction() {
+      alert("The account has been added successfully!");
+   }
+</script>
+ {% endblock %}
+
+
+

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.shortcuts import redirect
 from django.views.decorators.cache import cache_control
-from .models import CompanyInfo, CamerasInfo
+from .models import CompanyInfo, CamerasInfo, UserInfo
 from django.shortcuts import render
 from django.http.response import StreamingHttpResponse
 from django.contrib.auth import logout as auth_logout
@@ -19,10 +19,12 @@ import requests
 current_user = None
 url_of_cam = None
 name_of_cam = None
+is_company = True
 
 
 def index(request):
     global current_user
+    global is_company
     if request.method == 'POST':
         if request.POST.get('signup'):
             CompanyInfo.objects.create(name_of_company=request.POST.get('comp_name'),
@@ -30,7 +32,7 @@ def index(request):
                                        password_of_company=request.POST.get('comb_pass'),
                                        activation_code=request.POST.get('activation_code'))
             current_user = request.POST.get('comp_email')
-            return render(request, 'main/home.html', {})
+            return render(request, 'main/home.html', { 'type_user': True})
         elif request.POST.get('signin'):
             username = request.POST.get('username')
             password = request.POST.get('password')
@@ -39,15 +41,28 @@ def index(request):
             try:
                 query = CompanyInfo.objects.get(email_of_company=username)
                 print(username + "in try")
+                is_company = True
             except Exception as e:
-                return redirect('401')
-
-            if query.password_of_company == password:
-                request.session['username'] = query.id
-                return redirect('home')
+                is_company = False
+                try:
+                    query = UserInfo.objects.get(email_of_user=username)
+                    print(username + "in try")
+                except Exception as e:
+                    return redirect('401')
+            if is_company:
+                if query.password_of_company == password:
+                    request.session['username'] = query.id
+                    return redirect('home')
+                else:
+                    print("Someone tried to login and failed.")
+                    return redirect('401')
             else:
-                print("Someone tried to login and failed.")
-                return redirect('401')
+                if query.password_of_user == password:
+                    request.session['username'] = query.id
+                    return redirect('home')
+                else:
+                    print("Someone tried to login and failed.")
+                    return redirect('401')
 
     elif request.method == 'GET':
         return render(request, 'main/index.html', {})
@@ -58,7 +73,19 @@ def page401(request):
 
 
 def home(request):
-    current_company = CompanyInfo.objects.get(email_of_company=current_user)
+    if not is_company:
+        current_police = UserInfo.objects.get(email_of_user=current_user)
+        current_company = current_police.company_id
+        typeper = current_police.permission_type
+        if typeper == "admin":
+            type_user = True
+        else:
+            type_user = False
+    else:
+        print(is_company)
+        type_user = True
+        current_company = CompanyInfo.objects.get(email_of_company=current_user)
+
     number_of_camera = current_company.number_of_camera
     if number_of_camera >= 1:
         camera = CamerasInfo.objects.filter(company_info_id=current_company, is_running=1).first()
@@ -71,17 +98,17 @@ def home(request):
         if check_status_of_url:
             url_is_exit = True
             return render(request, "main/home.html", {
-                'url_is_exit': url_is_exit
+                'url_is_exit': url_is_exit, 'type_user': type_user
             })
         else:
             flag = True
             return render(request, "main/home.html", {
-                'flag': flag, 'URL': url_of_cam
+                'flag': flag, 'URL': url_of_cam, 'type_user': type_user
             })
 
     flag = False
     return render(request, "main/home.html", {
-        'flag': flag})
+        'flag': flag, 'type_user': type_user})
 
 
 def ip_result(request):
@@ -148,35 +175,35 @@ def res_ip():
     if not vcap.isOpened():
         print("there is no cam")
     else:
-         frameno = 0
-         while True:
+        frameno = 0
+        while True:
             ret, frame = vcap.read()
             if not ret:
                 break
             frameno += 1
             print("########################################")
             print("Frame %d" % frameno)
-        # Acquire frame and expand frame dimensions to have shape: [1, None, None, 3]
-        # i.e. a single-column array, where each item in the column has the pixel RGB value
+            # Acquire frame and expand frame dimensions to have shape: [1, None, None, 3]
+            # i.e. a single-column array, where each item in the column has the pixel RGB value
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_expanded = np.expand_dims(frame_rgb, axis=0)
 
-        # Perform the actual detection by running the model with the image as input
+            # Perform the actual detection by running the model with the image as input
             (boxes, scores, classes, num) = sess.run(
                 [detection_boxes, detection_scores, detection_classes, num_detections],
                 feed_dict={image_tensor: frame_expanded})
 
-        # Draw the results of the detection (aka 'visulaize the results')
+            # Draw the results of the detection (aka 'visulaize the results')
             vis_util.visualize_boxes_and_labels_on_image_array(
-            frameno,
-            frame,
-            np.squeeze(boxes),
-            np.squeeze(classes).astype(np.int32),
-            np.squeeze(scores),
-            category_index,
-            use_normalized_coordinates=True,
-            line_thickness=8,
-            min_score_thresh=0.60)
+                frameno,
+                frame,
+                np.squeeze(boxes),
+                np.squeeze(classes).astype(np.int32),
+                np.squeeze(scores),
+                category_index,
+                use_normalized_coordinates=True,
+                line_thickness=8,
+                min_score_thresh=0.60)
             width = 900
             height = 550
             dim = (width, height)
@@ -217,9 +244,9 @@ def addnewcamera(request):
                                            is_running=True,
                                            )
 
-        return render(request, "main/addnewcamera.html", {})
+        return render(request, "main/addnewcamera.html", {'type_user': True})
     else:
-        return render(request, "main/addnewcamera.html", {})
+        return render(request, "main/addnewcamera.html", {'type_user': True})
 
 
 @cache_control(no_cache=True, must_revalidate=True)
@@ -240,3 +267,24 @@ def is_url_image(image_url):
         return False
 
     return True
+
+
+def add_policeman_account(request):
+    if request.method == 'POST':
+        if request.POST.get('addaccount'):
+            user_name = request.POST.get('nameofuser')
+            user_email = request.POST.get('email_police')
+            company = CompanyInfo.objects.get(email_of_company=current_user)
+            answer = request.POST['dropdown']
+            password_user = request.POST.get('id_password')
+            print(answer)
+            UserInfo.objects.create(name_of_user=user_name,
+                                    email_of_user=user_email,
+                                    company_id=company,
+                                    password_of_user=password_user,
+                                    permission_type=answer,
+                                    )
+
+        return render(request, "main/adduseraccount.html", {'type_user': True})
+    else:
+        return render(request, "main/adduseraccount.html", {'type_user': True})
